@@ -86,27 +86,35 @@ class DNS1D {
      * @return string SVG code.
      * @protected
      */
-    public function getBarcodeSVG($code, $type, $w = 2, $h = 30, $color = 'black', $showCode = true, $inline = false) {
+    public function getBarcodeSVG(
+        int $code,
+        string $type,
+        int $w = 2,
+        int $h = 30,
+        string $color = 'black',
+        bool $showCode = true,
+        bool $inline = false,
+        int $fontsize = 12
+    ) {
         if (!$this->store_path) {
             $this->setStorPath(app('config')->get("barcode.store_path"));
         }
         $this->setBarcode($code, $type);
-        // replace table for special characters
-        $repstr = array("\0" => '', '&' => '&amp;', '<' => '&lt;', '>' => '&gt;');
+
         $svg = '';
-        if (!$inline)
-        {
+        if (!$inline) {
             $svg = '<' . '?' . 'xml version="1.0" standalone="no"' . '?' . '>' . "\n";
             $svg .= '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">' . "\n";
         }
         $svg .= '<svg width="' . round(($this->barcode_array['maxw'] * $w), 3) . '" height="' . $h . '" version="1.1" xmlns="http://www.w3.org/2000/svg">' . "\n";
         $svg .= "\t" . '<g id="bars" fill="' . $color . '" stroke="none">' . "\n";
+
         // print bars
         $x = 0;
         foreach ($this->barcode_array['bcode'] as $k => $v) {
             $bw = round(($v['w'] * $w), 3);
-            $bh = round(($v['h'] * $h / $this->barcode_array['maxh']), 3);
-        if($showCode)
+            $bh = round(($v['h'] * $h / $this->barcode_array['maxh']), 3) - ($showCode ? $fontsize : 0);
+            if ($showCode)
                 $bh -= 12;
             if ($v['t']) {
                 $y = round(($v['p'] * $h / $this->barcode_array['maxh']), 3);
@@ -115,8 +123,10 @@ class DNS1D {
             }
             $x += $bw;
         }
-    if($showCode)
-            $svg .= "\t" .'<text x="'. (round(($this->barcode_array['maxw'] * $w), 3)/2)  .'" text-anchor="middle"  y="'.  ($bh + 12) .'" id="code" fill="' . $color . '" font-size ="12px" >'. $code .'</text>'. "\n";
+
+        if ($showCode) {
+            $svg .= "\t" . '<text x="' . (round(($this->barcode_array['maxw'] * $w), 3) / 2)  . '" text-anchor="middle"  y="' .  ($bh + $fontsize) . '" id="code" fill="' . $color . '" font-size="' . $fontsize . 'px" >' . $code . '</text>' . "\n";
+        }
 
         $svg .= "\t" . '</g>' . "\n";
         $svg .= '</svg>' . "\n";
@@ -134,20 +144,30 @@ class DNS1D {
      * @return string HTML code.
      * @protected
      */
-    public function getBarcodeHTML($code, $type, $w = 2, $h = 30, $color = 'black', $showCode =0) {
+    public function getBarcodeHTML(
+        int $code,
+        string $type,
+        int $w = 2,
+        int $h = 30,
+        string $color = 'black',
+        bool $showCode = true,
+        int $fontsize = 12
+    ) {
         if (!$this->store_path) {
             $this->setStorPath(app('config')->get("barcode.store_path"));
         }
         $this->setBarcode($code, $type);
+
         $html = '<div style="font-size:0;position:relative;">' . "\n";
         $html = '<div style="font-size:0;position:relative;width:' . ($this->barcode_array['maxw'] * $w) . 'px;height:' . ($h) . 'px;">' . "\n";
+
         // print bars
         $x = 0;
         foreach ($this->barcode_array['bcode'] as $k => $v) {
             $bw = round(($v['w'] * $w), 3);
             $bh = round(($v['h'] * $h / $this->barcode_array['maxh']), 3);
-        if($showCode)
-            $bh -= ($showCode + 12);
+            if ($showCode)
+                $bh -= ($showCode + 12);
             if ($v['t']) {
                 $y = round(($v['p'] * $h / $this->barcode_array['maxh']), 3);
                 // draw a vertical bar
@@ -155,8 +175,10 @@ class DNS1D {
             }
             $x += $bw;
         }
-    if($showCode)
-            $html .= '<div style="position:absolute;bottom:0; text-align:center;color:' . $color . '; width:' . ($this->barcode_array['maxw'] * $w) . 'px;  font-size: ' . $showCode . 'px;">' . $code . '</div>';
+
+        if ($showCode) {
+            $html .= '<div style="position:absolute;bottom:0; text-align:center;color:' . $color . '; width:' . ($this->barcode_array['maxw'] * $w) . 'px;  font-size: ' . $fontsize . 'px;">' . $code . '</div>';
+        }
 
         $html .= '</div>' . "\n";
         return $html;
@@ -172,7 +194,15 @@ class DNS1D {
      * @return string|false in case of error.
      * @protected
      */
-    public function getBarcodePNG($code, $type, $w = 2, $h = 30, $color = array(0, 0, 0), $showCode = false) {
+    public function getBarcodePNG(
+        int $code,
+        string $type,
+        int $w = 2,
+        int $h = 30,
+        array $color = array(0, 0, 0),
+        bool $showCode = true,
+        int $fontsize = 12
+    ) {
         if (!$this->store_path) {
             $this->setStorPath(app('config')->get("barcode.store_path"));
         }
@@ -198,13 +228,15 @@ class DNS1D {
         } else {
             return false;
         }
+
         // print bars
         $x = 0;
         foreach ($this->barcode_array['bcode'] as $k => $v) {
             $bw = round(($v['w'] * $w), 3);
             $bh = round(($v['h'] * $h / $this->barcode_array['maxh']), 3);
-        if($showCode)
-                $bh -= imagefontheight(3) ;
+            if ($showCode) {
+                $bh -= imagefontheight($fontsize);
+            }
             if ($v['t']) {
                 $y = round(($v['p'] * $h / $this->barcode_array['maxh']), 3);
                 // draw a vertical bar
@@ -218,17 +250,16 @@ class DNS1D {
         }
         ob_start();
 
-    // Add Code String in bottom
-        if($showCode)
+        // Add Code String in bottom
+        if ($showCode)
             if ($imagick) {
-            $bar->setTextAlignment(\Imagick::ALIGN_CENTER);
-            $bar->annotation( 10 , $h - $bh +10 , $code );
-        } else {
-            $width_text = imagefontwidth(3) * strlen($code);
-            $height_text = imagefontheight(3);
-            imagestring($png, 3, ($width/2) - ($width_text/2) , ($height - $height_text) , $code, $fgcol);
-
-        }
+                $bar->setTextAlignment(\Imagick::ALIGN_CENTER);
+                $bar->annotation(10, $h - $bh + 10, $code);
+            } else {
+                $width_text = imagefontwidth($fontsize) * strlen($code);
+                $height_text = imagefontheight($fontsize);
+                imagestring($png, 3, ($width / 2) - ($width_text / 2), ($height - $height_text), $code, $fgcol);
+            }
         // get image out put
         if ($imagick) {
             $png->drawimage($bar);
@@ -247,9 +278,8 @@ class DNS1D {
      * Get the array representation of last generated barcode.
      *
      * @return array
-    */
-    protected function getBarcodeArray()
-    {
+     */
+    protected function getBarcodeArray() {
         return $this->barcode_array;
     }
 
@@ -295,8 +325,8 @@ class DNS1D {
             $bw = round(($v['w'] * $w), 3);
             $bh = round(($v['h'] * $h / $this->barcode_array['maxh']), 3);
 
-        if($showCode)
-                 $bh -= imagefontheight(3) ;
+            if ($showCode)
+                $bh -= imagefontheight(3);
             if ($v['t']) {
                 $y = round(($v['p'] * $h / $this->barcode_array['maxh']), 3);
                 // draw a vertical bar
@@ -308,17 +338,17 @@ class DNS1D {
             }
             $x += $bw;
         }
-    if($showCode)
+        if ($showCode)
             if ($imagick) {
                 $bar->setTextAlignment(\Imagick::ALIGN_CENTER);
-                $bar->annotation( 10 , $h - $bh +10 , $code );
+                $bar->annotation(10, $h - $bh + 10, $code);
             } else {
                 $width_text = imagefontwidth(3) * strlen($code);
                 $height_text = imagefontheight(3);
-                imagestring($png, 3, ($width/2) - ($width_text/2) , ($height - $height_text) , $code, $fgcol);
+                imagestring($png, 3, ($width / 2) - ($width_text / 2), ($height - $height_text), $code, $fgcol);
             }
 
-        $file_name= Str::slug($code);
+        $file_name = Str::slug($code);
         $save_file = $this->checkfile($this->store_path . $file_name . ".png");
 
         if ($imagick) {
@@ -478,16 +508,16 @@ class DNS1D {
             case 'PHARMA2T': { // PHARMACODE TWO-TRACKS
                     $arrcode = $this->barcode_pharmacode2t($code);
                     break;
-            }
+                }
             case 'GS1-128': {
-                $arrcode = $this->barcodeGs1128($code);
-                break;
-            }
+                    $arrcode = $this->barcodeGs1128($code);
+                    break;
+                }
             default: {
-                $this->barcode_array = false;
+                    $this->barcode_array = false;
                     $arrcode = false;
                     break;
-            }
+                }
         }
         $this->barcode_array = $arrcode;
     }
@@ -596,38 +626,135 @@ class DNS1D {
      */
     protected function encode_code39_ext($code) {
         $encode = array(
-            chr(0) => '%U', chr(1) => '$A', chr(2) => '$B', chr(3) => '$C',
-            chr(4) => '$D', chr(5) => '$E', chr(6) => '$F', chr(7) => '$G',
-            chr(8) => '$H', chr(9) => '$I', chr(10) => '$J', chr(11) => '£K',
-            chr(12) => '$L', chr(13) => '$M', chr(14) => '$N', chr(15) => '$O',
-            chr(16) => '$P', chr(17) => '$Q', chr(18) => '$R', chr(19) => '$S',
-            chr(20) => '$T', chr(21) => '$U', chr(22) => '$V', chr(23) => '$W',
-            chr(24) => '$X', chr(25) => '$Y', chr(26) => '$Z', chr(27) => '%A',
-            chr(28) => '%B', chr(29) => '%C', chr(30) => '%D', chr(31) => '%E',
-            chr(32) => ' ', chr(33) => '/A', chr(34) => '/B', chr(35) => '/C',
-            chr(36) => '/D', chr(37) => '/E', chr(38) => '/F', chr(39) => '/G',
-            chr(40) => '/H', chr(41) => '/I', chr(42) => '/J', chr(43) => '/K',
-            chr(44) => '/L', chr(45) => '-', chr(46) => '.', chr(47) => '/O',
-            chr(48) => '0', chr(49) => '1', chr(50) => '2', chr(51) => '3',
-            chr(52) => '4', chr(53) => '5', chr(54) => '6', chr(55) => '7',
-            chr(56) => '8', chr(57) => '9', chr(58) => '/Z', chr(59) => '%F',
-            chr(60) => '%G', chr(61) => '%H', chr(62) => '%I', chr(63) => '%J',
-            chr(64) => '%V', chr(65) => 'A', chr(66) => 'B', chr(67) => 'C',
-            chr(68) => 'D', chr(69) => 'E', chr(70) => 'F', chr(71) => 'G',
-            chr(72) => 'H', chr(73) => 'I', chr(74) => 'J', chr(75) => 'K',
-            chr(76) => 'L', chr(77) => 'M', chr(78) => 'N', chr(79) => 'O',
-            chr(80) => 'P', chr(81) => 'Q', chr(82) => 'R', chr(83) => 'S',
-            chr(84) => 'T', chr(85) => 'U', chr(86) => 'V', chr(87) => 'W',
-            chr(88) => 'X', chr(89) => 'Y', chr(90) => 'Z', chr(91) => '%K',
-            chr(92) => '%L', chr(93) => '%M', chr(94) => '%N', chr(95) => '%O',
-            chr(96) => '%W', chr(97) => '+A', chr(98) => '+B', chr(99) => '+C',
-            chr(100) => '+D', chr(101) => '+E', chr(102) => '+F', chr(103) => '+G',
-            chr(104) => '+H', chr(105) => '+I', chr(106) => '+J', chr(107) => '+K',
-            chr(108) => '+L', chr(109) => '+M', chr(110) => '+N', chr(111) => '+O',
-            chr(112) => '+P', chr(113) => '+Q', chr(114) => '+R', chr(115) => '+S',
-            chr(116) => '+T', chr(117) => '+U', chr(118) => '+V', chr(119) => '+W',
-            chr(120) => '+X', chr(121) => '+Y', chr(122) => '+Z', chr(123) => '%P',
-            chr(124) => '%Q', chr(125) => '%R', chr(126) => '%S', chr(127) => '%T');
+            chr(0) => '%U',
+            chr(1) => '$A',
+            chr(2) => '$B',
+            chr(3) => '$C',
+            chr(4) => '$D',
+            chr(5) => '$E',
+            chr(6) => '$F',
+            chr(7) => '$G',
+            chr(8) => '$H',
+            chr(9) => '$I',
+            chr(10) => '$J',
+            chr(11) => '£K',
+            chr(12) => '$L',
+            chr(13) => '$M',
+            chr(14) => '$N',
+            chr(15) => '$O',
+            chr(16) => '$P',
+            chr(17) => '$Q',
+            chr(18) => '$R',
+            chr(19) => '$S',
+            chr(20) => '$T',
+            chr(21) => '$U',
+            chr(22) => '$V',
+            chr(23) => '$W',
+            chr(24) => '$X',
+            chr(25) => '$Y',
+            chr(26) => '$Z',
+            chr(27) => '%A',
+            chr(28) => '%B',
+            chr(29) => '%C',
+            chr(30) => '%D',
+            chr(31) => '%E',
+            chr(32) => ' ',
+            chr(33) => '/A',
+            chr(34) => '/B',
+            chr(35) => '/C',
+            chr(36) => '/D',
+            chr(37) => '/E',
+            chr(38) => '/F',
+            chr(39) => '/G',
+            chr(40) => '/H',
+            chr(41) => '/I',
+            chr(42) => '/J',
+            chr(43) => '/K',
+            chr(44) => '/L',
+            chr(45) => '-',
+            chr(46) => '.',
+            chr(47) => '/O',
+            chr(48) => '0',
+            chr(49) => '1',
+            chr(50) => '2',
+            chr(51) => '3',
+            chr(52) => '4',
+            chr(53) => '5',
+            chr(54) => '6',
+            chr(55) => '7',
+            chr(56) => '8',
+            chr(57) => '9',
+            chr(58) => '/Z',
+            chr(59) => '%F',
+            chr(60) => '%G',
+            chr(61) => '%H',
+            chr(62) => '%I',
+            chr(63) => '%J',
+            chr(64) => '%V',
+            chr(65) => 'A',
+            chr(66) => 'B',
+            chr(67) => 'C',
+            chr(68) => 'D',
+            chr(69) => 'E',
+            chr(70) => 'F',
+            chr(71) => 'G',
+            chr(72) => 'H',
+            chr(73) => 'I',
+            chr(74) => 'J',
+            chr(75) => 'K',
+            chr(76) => 'L',
+            chr(77) => 'M',
+            chr(78) => 'N',
+            chr(79) => 'O',
+            chr(80) => 'P',
+            chr(81) => 'Q',
+            chr(82) => 'R',
+            chr(83) => 'S',
+            chr(84) => 'T',
+            chr(85) => 'U',
+            chr(86) => 'V',
+            chr(87) => 'W',
+            chr(88) => 'X',
+            chr(89) => 'Y',
+            chr(90) => 'Z',
+            chr(91) => '%K',
+            chr(92) => '%L',
+            chr(93) => '%M',
+            chr(94) => '%N',
+            chr(95) => '%O',
+            chr(96) => '%W',
+            chr(97) => '+A',
+            chr(98) => '+B',
+            chr(99) => '+C',
+            chr(100) => '+D',
+            chr(101) => '+E',
+            chr(102) => '+F',
+            chr(103) => '+G',
+            chr(104) => '+H',
+            chr(105) => '+I',
+            chr(106) => '+J',
+            chr(107) => '+K',
+            chr(108) => '+L',
+            chr(109) => '+M',
+            chr(110) => '+N',
+            chr(111) => '+O',
+            chr(112) => '+P',
+            chr(113) => '+Q',
+            chr(114) => '+R',
+            chr(115) => '+S',
+            chr(116) => '+T',
+            chr(117) => '+U',
+            chr(118) => '+V',
+            chr(119) => '+W',
+            chr(120) => '+X',
+            chr(121) => '+Y',
+            chr(122) => '+Z',
+            chr(123) => '%P',
+            chr(124) => '%Q',
+            chr(125) => '%R',
+            chr(126) => '%S',
+            chr(127) => '%T'
+        );
         $code_ext = '';
         $clen = strlen($code);
         for ($i = 0; $i < $clen; ++$i) {
@@ -647,10 +774,50 @@ class DNS1D {
      */
     protected function checksum_code39($code) {
         $chars = array(
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
-            'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-            'W', 'X', 'Y', 'Z', '-', '.', ' ', '$', '/', '+', '%');
+            '0',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+            '8',
+            '9',
+            'A',
+            'B',
+            'C',
+            'D',
+            'E',
+            'F',
+            'G',
+            'H',
+            'I',
+            'J',
+            'K',
+            'L',
+            'M',
+            'N',
+            'O',
+            'P',
+            'Q',
+            'R',
+            'S',
+            'T',
+            'U',
+            'V',
+            'W',
+            'X',
+            'Y',
+            'Z',
+            '-',
+            '.',
+            ' ',
+            '$',
+            '/',
+            '+',
+            '%'
+        );
         $sum = 0;
         $clen = strlen($code);
         for ($i = 0; $i < $clen; ++$i) {
@@ -719,38 +886,135 @@ class DNS1D {
         $chr[42] = '111141'; // start-stop
         $code = strtoupper($code);
         $encode = array(
-            chr(0) => chr(131) . 'U', chr(1) => chr(128) . 'A', chr(2) => chr(128) . 'B', chr(3) => chr(128) . 'C',
-            chr(4) => chr(128) . 'D', chr(5) => chr(128) . 'E', chr(6) => chr(128) . 'F', chr(7) => chr(128) . 'G',
-            chr(8) => chr(128) . 'H', chr(9) => chr(128) . 'I', chr(10) => chr(128) . 'J', chr(11) => '£K',
-            chr(12) => chr(128) . 'L', chr(13) => chr(128) . 'M', chr(14) => chr(128) . 'N', chr(15) => chr(128) . 'O',
-            chr(16) => chr(128) . 'P', chr(17) => chr(128) . 'Q', chr(18) => chr(128) . 'R', chr(19) => chr(128) . 'S',
-            chr(20) => chr(128) . 'T', chr(21) => chr(128) . 'U', chr(22) => chr(128) . 'V', chr(23) => chr(128) . 'W',
-            chr(24) => chr(128) . 'X', chr(25) => chr(128) . 'Y', chr(26) => chr(128) . 'Z', chr(27) => chr(131) . 'A',
-            chr(28) => chr(131) . 'B', chr(29) => chr(131) . 'C', chr(30) => chr(131) . 'D', chr(31) => chr(131) . 'E',
-            chr(32) => ' ', chr(33) => chr(129) . 'A', chr(34) => chr(129) . 'B', chr(35) => chr(129) . 'C',
-            chr(36) => chr(129) . 'D', chr(37) => chr(129) . 'E', chr(38) => chr(129) . 'F', chr(39) => chr(129) . 'G',
-            chr(40) => chr(129) . 'H', chr(41) => chr(129) . 'I', chr(42) => chr(129) . 'J', chr(43) => chr(129) . 'K',
-            chr(44) => chr(129) . 'L', chr(45) => '-', chr(46) => '.', chr(47) => chr(129) . 'O',
-            chr(48) => '0', chr(49) => '1', chr(50) => '2', chr(51) => '3',
-            chr(52) => '4', chr(53) => '5', chr(54) => '6', chr(55) => '7',
-            chr(56) => '8', chr(57) => '9', chr(58) => chr(129) . 'Z', chr(59) => chr(131) . 'F',
-            chr(60) => chr(131) . 'G', chr(61) => chr(131) . 'H', chr(62) => chr(131) . 'I', chr(63) => chr(131) . 'J',
-            chr(64) => chr(131) . 'V', chr(65) => 'A', chr(66) => 'B', chr(67) => 'C',
-            chr(68) => 'D', chr(69) => 'E', chr(70) => 'F', chr(71) => 'G',
-            chr(72) => 'H', chr(73) => 'I', chr(74) => 'J', chr(75) => 'K',
-            chr(76) => 'L', chr(77) => 'M', chr(78) => 'N', chr(79) => 'O',
-            chr(80) => 'P', chr(81) => 'Q', chr(82) => 'R', chr(83) => 'S',
-            chr(84) => 'T', chr(85) => 'U', chr(86) => 'V', chr(87) => 'W',
-            chr(88) => 'X', chr(89) => 'Y', chr(90) => 'Z', chr(91) => chr(131) . 'K',
-            chr(92) => chr(131) . 'L', chr(93) => chr(131) . 'M', chr(94) => chr(131) . 'N', chr(95) => chr(131) . 'O',
-            chr(96) => chr(131) . 'W', chr(97) => chr(130) . 'A', chr(98) => chr(130) . 'B', chr(99) => chr(130) . 'C',
-            chr(100) => chr(130) . 'D', chr(101) => chr(130) . 'E', chr(102) => chr(130) . 'F', chr(103) => chr(130) . 'G',
-            chr(104) => chr(130) . 'H', chr(105) => chr(130) . 'I', chr(106) => chr(130) . 'J', chr(107) => chr(130) . 'K',
-            chr(108) => chr(130) . 'L', chr(109) => chr(130) . 'M', chr(110) => chr(130) . 'N', chr(111) => chr(130) . 'O',
-            chr(112) => chr(130) . 'P', chr(113) => chr(130) . 'Q', chr(114) => chr(130) . 'R', chr(115) => chr(130) . 'S',
-            chr(116) => chr(130) . 'T', chr(117) => chr(130) . 'U', chr(118) => chr(130) . 'V', chr(119) => chr(130) . 'W',
-            chr(120) => chr(130) . 'X', chr(121) => chr(130) . 'Y', chr(122) => chr(130) . 'Z', chr(123) => chr(131) . 'P',
-            chr(124) => chr(131) . 'Q', chr(125) => chr(131) . 'R', chr(126) => chr(131) . 'S', chr(127) => chr(131) . 'T');
+            chr(0) => chr(131) . 'U',
+            chr(1) => chr(128) . 'A',
+            chr(2) => chr(128) . 'B',
+            chr(3) => chr(128) . 'C',
+            chr(4) => chr(128) . 'D',
+            chr(5) => chr(128) . 'E',
+            chr(6) => chr(128) . 'F',
+            chr(7) => chr(128) . 'G',
+            chr(8) => chr(128) . 'H',
+            chr(9) => chr(128) . 'I',
+            chr(10) => chr(128) . 'J',
+            chr(11) => '£K',
+            chr(12) => chr(128) . 'L',
+            chr(13) => chr(128) . 'M',
+            chr(14) => chr(128) . 'N',
+            chr(15) => chr(128) . 'O',
+            chr(16) => chr(128) . 'P',
+            chr(17) => chr(128) . 'Q',
+            chr(18) => chr(128) . 'R',
+            chr(19) => chr(128) . 'S',
+            chr(20) => chr(128) . 'T',
+            chr(21) => chr(128) . 'U',
+            chr(22) => chr(128) . 'V',
+            chr(23) => chr(128) . 'W',
+            chr(24) => chr(128) . 'X',
+            chr(25) => chr(128) . 'Y',
+            chr(26) => chr(128) . 'Z',
+            chr(27) => chr(131) . 'A',
+            chr(28) => chr(131) . 'B',
+            chr(29) => chr(131) . 'C',
+            chr(30) => chr(131) . 'D',
+            chr(31) => chr(131) . 'E',
+            chr(32) => ' ',
+            chr(33) => chr(129) . 'A',
+            chr(34) => chr(129) . 'B',
+            chr(35) => chr(129) . 'C',
+            chr(36) => chr(129) . 'D',
+            chr(37) => chr(129) . 'E',
+            chr(38) => chr(129) . 'F',
+            chr(39) => chr(129) . 'G',
+            chr(40) => chr(129) . 'H',
+            chr(41) => chr(129) . 'I',
+            chr(42) => chr(129) . 'J',
+            chr(43) => chr(129) . 'K',
+            chr(44) => chr(129) . 'L',
+            chr(45) => '-',
+            chr(46) => '.',
+            chr(47) => chr(129) . 'O',
+            chr(48) => '0',
+            chr(49) => '1',
+            chr(50) => '2',
+            chr(51) => '3',
+            chr(52) => '4',
+            chr(53) => '5',
+            chr(54) => '6',
+            chr(55) => '7',
+            chr(56) => '8',
+            chr(57) => '9',
+            chr(58) => chr(129) . 'Z',
+            chr(59) => chr(131) . 'F',
+            chr(60) => chr(131) . 'G',
+            chr(61) => chr(131) . 'H',
+            chr(62) => chr(131) . 'I',
+            chr(63) => chr(131) . 'J',
+            chr(64) => chr(131) . 'V',
+            chr(65) => 'A',
+            chr(66) => 'B',
+            chr(67) => 'C',
+            chr(68) => 'D',
+            chr(69) => 'E',
+            chr(70) => 'F',
+            chr(71) => 'G',
+            chr(72) => 'H',
+            chr(73) => 'I',
+            chr(74) => 'J',
+            chr(75) => 'K',
+            chr(76) => 'L',
+            chr(77) => 'M',
+            chr(78) => 'N',
+            chr(79) => 'O',
+            chr(80) => 'P',
+            chr(81) => 'Q',
+            chr(82) => 'R',
+            chr(83) => 'S',
+            chr(84) => 'T',
+            chr(85) => 'U',
+            chr(86) => 'V',
+            chr(87) => 'W',
+            chr(88) => 'X',
+            chr(89) => 'Y',
+            chr(90) => 'Z',
+            chr(91) => chr(131) . 'K',
+            chr(92) => chr(131) . 'L',
+            chr(93) => chr(131) . 'M',
+            chr(94) => chr(131) . 'N',
+            chr(95) => chr(131) . 'O',
+            chr(96) => chr(131) . 'W',
+            chr(97) => chr(130) . 'A',
+            chr(98) => chr(130) . 'B',
+            chr(99) => chr(130) . 'C',
+            chr(100) => chr(130) . 'D',
+            chr(101) => chr(130) . 'E',
+            chr(102) => chr(130) . 'F',
+            chr(103) => chr(130) . 'G',
+            chr(104) => chr(130) . 'H',
+            chr(105) => chr(130) . 'I',
+            chr(106) => chr(130) . 'J',
+            chr(107) => chr(130) . 'K',
+            chr(108) => chr(130) . 'L',
+            chr(109) => chr(130) . 'M',
+            chr(110) => chr(130) . 'N',
+            chr(111) => chr(130) . 'O',
+            chr(112) => chr(130) . 'P',
+            chr(113) => chr(130) . 'Q',
+            chr(114) => chr(130) . 'R',
+            chr(115) => chr(130) . 'S',
+            chr(116) => chr(130) . 'T',
+            chr(117) => chr(130) . 'U',
+            chr(118) => chr(130) . 'V',
+            chr(119) => chr(130) . 'W',
+            chr(120) => chr(130) . 'X',
+            chr(121) => chr(130) . 'Y',
+            chr(122) => chr(130) . 'Z',
+            chr(123) => chr(131) . 'P',
+            chr(124) => chr(131) . 'Q',
+            chr(125) => chr(131) . 'R',
+            chr(126) => chr(131) . 'S',
+            chr(127) => chr(131) . 'T'
+        );
         $code_ext = '';
         $clen = strlen($code);
         for ($i = 0; $i < $clen; ++$i) {
@@ -798,11 +1062,54 @@ class DNS1D {
      */
     protected function checksum_code93($code) {
         $chars = array(
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
-            'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-            'W', 'X', 'Y', 'Z', '-', '.', ' ', '$', '/', '+', '%',
-            '<', '=', '>', '?');
+            '0',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+            '8',
+            '9',
+            'A',
+            'B',
+            'C',
+            'D',
+            'E',
+            'F',
+            'G',
+            'H',
+            'I',
+            'J',
+            'K',
+            'L',
+            'M',
+            'N',
+            'O',
+            'P',
+            'Q',
+            'R',
+            'S',
+            'T',
+            'U',
+            'V',
+            'W',
+            'X',
+            'Y',
+            'Z',
+            '-',
+            '.',
+            ' ',
+            '$',
+            '/',
+            '+',
+            '%',
+            '<',
+            '=',
+            '>',
+            '?'
+        );
         // translate special characters
         $code = strtr($code, chr(128) . chr(131) . chr(129) . chr(130), '<=>?');
         $len = strlen($code);
@@ -848,11 +1155,11 @@ class DNS1D {
     protected function checksum_s25($code) {
         $len = strlen($code);
         $sum = 0;
-        for ($i = 0; $i < $len; $i+=2) {
+        for ($i = 0; $i < $len; $i += 2) {
             $sum += $code[$i];
         }
         $sum *= 3;
-        for ($i = 1; $i < $len; $i+=2) {
+        for ($i = 1; $i < $len; $i += 2) {
             $sum += ($code[$i]);
         }
         $r = $sum % 10;
@@ -978,7 +1285,7 @@ class DNS1D {
         $k = 0;
         for ($i = 0; $i < $len; ++$i) {
             $w += 1;
-            if (($i == ($len - 1)) OR (($i < ($len - 1)) AND ($seq[$i] != $seq[($i + 1)]))) {
+            if (($i == ($len - 1)) or (($i < ($len - 1)) and ($seq[$i] != $seq[($i + 1)]))) {
                 if ($seq[$i] == '1') {
                     $t = true; // bar
                 } else {
@@ -1032,7 +1339,7 @@ class DNS1D {
         for ($i = 0; $i < $clen; $i = ($i + 2)) {
             $char_bar = $code[$i];
             $char_space = $code[$i + 1];
-            if ((!isset($chr[$char_bar])) OR (!isset($chr[$char_space]))) {
+            if ((!isset($chr[$char_bar])) or (!isset($chr[$char_space]))) {
                 // invalid character
                 return false;
             }
@@ -1198,9 +1505,9 @@ class DNS1D {
                     for ($i = 0; $i < $len; ++$i) {
                         $char = $code[$i];
                         $char_id = ord($char);
-                        if (($char_id >= 241) AND ($char_id <= 244)) {
+                        if (($char_id >= 241) and ($char_id <= 244)) {
                             $code_data[] = $fnc_a[$char_id];
-                        } elseif (($char_id >= 0) AND ($char_id <= 95)) {
+                        } elseif (($char_id >= 0) and ($char_id <= 95)) {
                             $code_data[] = strpos($keys_a, $char);
                         } else {
                             return false;
@@ -1213,9 +1520,9 @@ class DNS1D {
                     for ($i = 0; $i < $len; ++$i) {
                         $char = $code[$i];
                         $char_id = ord($char);
-                        if (($char_id >= 241) AND ($char_id <= 244)) {
+                        if (($char_id >= 241) and ($char_id <= 244)) {
                             $code_data[] = $fnc_b[$char_id];
-                        } elseif (($char_id >= 32) AND ($char_id <= 127)) {
+                        } elseif (($char_id >= 32) and ($char_id <= 127)) {
                             $code_data[] = strpos($keys_b, $char);
                         } else {
                             return false;
@@ -1234,7 +1541,7 @@ class DNS1D {
                         // the length must be even
                         return false;
                     }
-                    for ($i = 0; $i < $len; $i+=2) {
+                    for ($i = 0; $i < $len; $i += 2) {
                         $chrnum = $code[$i] . $code[$i + 1];
                         if (preg_match('/([0-9]{2})/', $chrnum) > 0) {
                             $code_data[] = intval($chrnum);
@@ -1250,7 +1557,7 @@ class DNS1D {
                     // get numeric sequences (if any)
                     $numseq = array();
                     preg_match_all('/([0-9]{4,})/', $code, $numseq, PREG_OFFSET_CAPTURE);
-                    if (isset($numseq[1]) AND !empty($numseq[1])) {
+                    if (isset($numseq[1]) and !empty($numseq[1])) {
                         $end_offset = 0;
                         foreach ($numseq[1] as $val) {
                             $offset = $val[1];
@@ -1281,7 +1588,7 @@ class DNS1D {
                                     if ($key == 0) {
                                         $startid = 103;
                                     } elseif ($sequence[($key - 1)][0] != 'A') {
-                                        if (($seq[2] == 1) AND ($key > 0) AND ($sequence[($key - 1)][0] == 'B') AND (!isset($sequence[($key - 1)][3]))) {
+                                        if (($seq[2] == 1) and ($key > 0) and ($sequence[($key - 1)][0] == 'B') and (!isset($sequence[($key - 1)][3]))) {
                                             // single character shift
                                             $code_data[] = 98;
                                             // mark shift
@@ -1293,7 +1600,7 @@ class DNS1D {
                                     for ($i = 0; $i < $seq[2]; ++$i) {
                                         $char = $seq[1][$i];
                                         $char_id = ord($char);
-                                        if (($char_id >= 241) AND ($char_id <= 244)) {
+                                        if (($char_id >= 241) and ($char_id <= 244)) {
                                             $code_data[] = $fnc_a[$char_id];
                                         } else {
                                             $code_data[] = strpos($keys_a, $char);
@@ -1304,7 +1611,7 @@ class DNS1D {
                             case 'B': {
                                     if ($key == 0) {
                                         $tmpchr = ord($seq[1][0]);
-                                        if (($seq[2] == 1) AND ($tmpchr >= 241) AND ($tmpchr <= 244) AND isset($sequence[($key + 1)]) AND ($sequence[($key + 1)][0] != 'B')) {
+                                        if (($seq[2] == 1) and ($tmpchr >= 241) and ($tmpchr <= 244) and isset($sequence[($key + 1)]) and ($sequence[($key + 1)][0] != 'B')) {
                                             switch ($sequence[($key + 1)][0]) {
                                                 case 'A': {
                                                         $startid = 103;
@@ -1324,7 +1631,7 @@ class DNS1D {
                                             $startid = 104;
                                         }
                                     } elseif ($sequence[($key - 1)][0] != 'B') {
-                                        if (($seq[2] == 1) AND ($key > 0) AND ($sequence[($key - 1)][0] == 'A') AND (!isset($sequence[($key - 1)][3]))) {
+                                        if (($seq[2] == 1) and ($key > 0) and ($sequence[($key - 1)][0] == 'A') and (!isset($sequence[($key - 1)][3]))) {
                                             // single character shift
                                             $code_data[] = 98;
                                             // mark shift
@@ -1336,7 +1643,7 @@ class DNS1D {
                                     for ($i = 0; $i < $seq[2]; ++$i) {
                                         $char = $seq[1][$i];
                                         $char_id = ord($char);
-                                        if (($char_id >= 241) AND ($char_id <= 244)) {
+                                        if (($char_id >= 241) and ($char_id <= 244)) {
                                             $code_data[] = $fnc_b[$char_id];
                                         } else {
                                             $code_data[] = strpos($keys_b, $char);
@@ -1350,7 +1657,7 @@ class DNS1D {
                                     } elseif ($sequence[($key - 1)][0] != 'C') {
                                         $code_data[] = 99;
                                     }
-                                    for ($i = 0; $i < $seq[2]; $i+=2) {
+                                    for ($i = 0; $i < $seq[2]; $i += 2) {
                                         $chrnum = $seq[1][$i] . $seq[1][$i + 1];
                                         $code_data[] = intval($chrnum);
                                     }
@@ -1398,8 +1705,7 @@ class DNS1D {
      * @return array barcode representation.
      * @protected
      */
-    private function barcodeGs1128($code)
-    {
+    private function barcodeGs1128($code) {
         $strChar = [
             '212222', /* 00 */
             '222122', /* 01 */
@@ -1543,7 +1849,7 @@ class DNS1D {
         // get A sequences (if any)
         $numseq = array();
         preg_match_all('/([\0-\31])/', $code, $numseq, PREG_OFFSET_CAPTURE);
-        if (isset($numseq[1]) AND !empty($numseq[1])) {
+        if (isset($numseq[1]) and !empty($numseq[1])) {
             $end_offset = 0;
             foreach ($numseq[1] as $val) {
                 $offset = $val[1];
@@ -1596,14 +1902,14 @@ class DNS1D {
         $code_len = strlen($code);
         // calculate check digit
         $sum_a = 0;
-        for ($i = 1; $i < $data_len; $i+=2) {
+        for ($i = 1; $i < $data_len; $i += 2) {
             $sum_a += $code[$i];
         }
         if ($len > 12) {
             $sum_a *= 3;
         }
         $sum_b = 0;
-        for ($i = 0; $i < $data_len; $i+=2) {
+        for ($i = 0; $i < $data_len; $i += 2) {
             $sum_b += ($code[$i]);
         }
         if ($len < 13) {
@@ -1627,7 +1933,7 @@ class DNS1D {
         if ($upce) {
             // convert UPC-A to UPC-E
             $tmp = substr($code, 4, 3);
-            if (($tmp == '000') OR ($tmp == '100') OR ($tmp == '200')) {
+            if (($tmp == '000') or ($tmp == '100') or ($tmp == '200')) {
                 // manufacturer code ends in 000, 100, or 200
                 $upce_code = substr($code, 2, 2) . substr($code, 9, 3) . substr($code, 4, 1);
             } else {
@@ -1649,7 +1955,7 @@ class DNS1D {
         }
         //Convert digits to bars
         $codes = array(
-            'A' => array(// left odd parity
+            'A' => array( // left odd parity
                 '0' => '0001101',
                 '1' => '0011001',
                 '2' => '0010011',
@@ -1659,8 +1965,9 @@ class DNS1D {
                 '6' => '0101111',
                 '7' => '0111011',
                 '8' => '0110111',
-                '9' => '0001011'),
-            'B' => array(// left even parity
+                '9' => '0001011'
+            ),
+            'B' => array( // left even parity
                 '0' => '0100111',
                 '1' => '0110011',
                 '2' => '0011011',
@@ -1670,8 +1977,9 @@ class DNS1D {
                 '6' => '0000101',
                 '7' => '0010001',
                 '8' => '0001001',
-                '9' => '0010111'),
-            'C' => array(// right
+                '9' => '0010111'
+            ),
+            'C' => array( // right
                 '0' => '1110010',
                 '1' => '1100110',
                 '2' => '1101100',
@@ -1681,7 +1989,8 @@ class DNS1D {
                 '6' => '1010000',
                 '7' => '1000100',
                 '8' => '1001000',
-                '9' => '1110100')
+                '9' => '1110100'
+            )
         );
         $parities = array(
             '0' => array('A', 'A', 'A', 'A', 'A', 'A'),
@@ -1752,7 +2061,7 @@ class DNS1D {
         $w = 0;
         for ($i = 0; $i < $clen; ++$i) {
             $w += 1;
-            if (($i == ($clen - 1)) OR (($i < ($clen - 1)) AND ($seq[$i] != $seq[($i + 1)]))) {
+            if (($i == ($clen - 1)) or (($i < ($clen - 1)) and ($seq[$i] != $seq[($i + 1)]))) {
                 if ($seq[$i] == '1') {
                     $t = true; // bar
                 } else {
@@ -1790,7 +2099,7 @@ class DNS1D {
         }
         //Convert digits to bars
         $codes = array(
-            'A' => array(// left odd parity
+            'A' => array( // left odd parity
                 '0' => '0001101',
                 '1' => '0011001',
                 '2' => '0010011',
@@ -1800,8 +2109,9 @@ class DNS1D {
                 '6' => '0101111',
                 '7' => '0111011',
                 '8' => '0110111',
-                '9' => '0001011'),
-            'B' => array(// left even parity
+                '9' => '0001011'
+            ),
+            'B' => array( // left even parity
                 '0' => '0100111',
                 '1' => '0110011',
                 '2' => '0011011',
@@ -1811,7 +2121,8 @@ class DNS1D {
                 '6' => '0000101',
                 '7' => '0010001',
                 '8' => '0001001',
-                '9' => '0010111')
+                '9' => '0010111'
+            )
         );
         $parities = array();
         $parities[2] = array(
@@ -1854,30 +2165,30 @@ class DNS1D {
     protected function barcode_postnet($code, $planet = false) {
         // bar lenght
         if ($planet) {
-            $barlen = Array(
-                0 => Array(1, 1, 2, 2, 2),
-                1 => Array(2, 2, 2, 1, 1),
-                2 => Array(2, 2, 1, 2, 1),
-                3 => Array(2, 2, 1, 1, 2),
-                4 => Array(2, 1, 2, 2, 1),
-                5 => Array(2, 1, 2, 1, 2),
-                6 => Array(2, 1, 1, 2, 2),
-                7 => Array(1, 2, 2, 2, 1),
-                8 => Array(1, 2, 2, 1, 2),
-                9 => Array(1, 2, 1, 2, 2)
+            $barlen = array(
+                0 => array(1, 1, 2, 2, 2),
+                1 => array(2, 2, 2, 1, 1),
+                2 => array(2, 2, 1, 2, 1),
+                3 => array(2, 2, 1, 1, 2),
+                4 => array(2, 1, 2, 2, 1),
+                5 => array(2, 1, 2, 1, 2),
+                6 => array(2, 1, 1, 2, 2),
+                7 => array(1, 2, 2, 2, 1),
+                8 => array(1, 2, 2, 1, 2),
+                9 => array(1, 2, 1, 2, 2)
             );
         } else {
-            $barlen = Array(
-                0 => Array(2, 2, 1, 1, 1),
-                1 => Array(1, 1, 1, 2, 2),
-                2 => Array(1, 1, 2, 1, 2),
-                3 => Array(1, 1, 2, 2, 1),
-                4 => Array(1, 2, 1, 1, 2),
-                5 => Array(1, 2, 1, 2, 1),
-                6 => Array(1, 2, 2, 1, 1),
-                7 => Array(2, 1, 1, 1, 2),
-                8 => Array(2, 1, 1, 2, 1),
-                9 => Array(2, 1, 2, 1, 1)
+            $barlen = array(
+                0 => array(2, 2, 1, 1, 1),
+                1 => array(1, 1, 1, 2, 2),
+                2 => array(1, 1, 2, 1, 2),
+                3 => array(1, 1, 2, 2, 1),
+                4 => array(1, 2, 1, 1, 2),
+                5 => array(1, 2, 1, 2, 1),
+                6 => array(1, 2, 2, 1, 1),
+                7 => array(2, 1, 1, 1, 2),
+                8 => array(2, 1, 1, 2, 1),
+                9 => array(2, 1, 2, 1, 1)
             );
         }
         $bararray = array('code' => $code, 'maxw' => 0, 'maxh' => 2, 'bcode' => array());
@@ -2402,7 +2713,7 @@ class DNS1D {
         for ($i = 0; $i < 65; ++$i) {
             $asc = (($characters[$asc_chr[$i]] & pow(2, $asc_pos[$i])) > 0);
             $dsc = (($characters[$dsc_chr[$i]] & pow(2, $dsc_pos[$i])) > 0);
-            if ($asc AND $dsc) {
+            if ($asc and $dsc) {
                 // full bar (F)
                 $p = 0;
                 $h = 3;
@@ -2653,9 +2964,9 @@ class DNS1D {
             $fgcol = imagecolorallocate($jpg, $color[0], $color[1], $color[2]);
         } elseif (extension_loaded('imagick')) {
             $imagick = true;
-            
+
             $bgcol = new \imagickpixel('rgb(255,255,255)');
-            $fgcol = new \imagickpixel('rgb(' . implode(',', $color) .')');
+            $fgcol = new \imagickpixel('rgb(' . implode(',', $color) . ')');
             $jpg = new \Imagick();
             $jpg->newImage($width, $height, 'white', 'jpg');
             $bar = new \imagickdraw();
@@ -2668,8 +2979,8 @@ class DNS1D {
         foreach ($this->barcode_array['bcode'] as $k => $v) {
             $bw = round(($v['w'] * $w), 3);
             $bh = round(($v['h'] * $h / $this->barcode_array['maxh']), 3);
-        if($showCode)
-                $bh -= imagefontheight(3) ;
+            if ($showCode)
+                $bh -= imagefontheight(3);
             if ($v['t']) {
                 $y = round(($v['p'] * $h / $this->barcode_array['maxh']), 3);
                 // draw a vertical bar
@@ -2683,17 +2994,16 @@ class DNS1D {
         }
         ob_start();
 
-    // Add Code String in bottom
-        if($showCode)
+        // Add Code String in bottom
+        if ($showCode)
             if ($imagick) {
-            $bar->setTextAlignment(\Imagick::ALIGN_CENTER);
-            $bar->annotation( 10 , $h - $bh +10 , $code );
-        } else {
-            $width_text = imagefontwidth(3) * strlen($code);
-            $height_text = imagefontheight(3);
-            imagestring($jpg, 3, ($width/2) - ($width_text/2) , ($height - $height_text) , $code, $fgcol);
-
-        }
+                $bar->setTextAlignment(\Imagick::ALIGN_CENTER);
+                $bar->annotation(10, $h - $bh + 10, $code);
+            } else {
+                $width_text = imagefontwidth(3) * strlen($code);
+                $height_text = imagefontheight(3);
+                imagestring($jpg, 3, ($width / 2) - ($width_text / 2), ($height - $height_text), $code, $fgcol);
+            }
         // get image out put
         if ($imagick) {
             $jpg->drawimage($bar);
@@ -2709,7 +3019,7 @@ class DNS1D {
     }
 
 
-       /**
+    /**
      * Return a .jpg file path which create in server
      * @param $code (string) code to print
      * @param $type (string) type of barcode: <ul><li>C39 : CODE 39 - ANSI MH10.8M-1983 - USD-3 - 3 of 9.</li><li>C39+ : CODE 39 with checksum</li><li>C39E : CODE 39 EXTENDED</li><li>C39E+ : CODE 39 EXTENDED + CHECKSUM</li><li>C93 : CODE 93 - USS-93</li><li>S25 : Standard 2 of 5</li><li>S25+ : Standard 2 of 5 + CHECKSUM</li><li>I25 : Interleaved 2 of 5</li><li>I25+ : Interleaved 2 of 5 + CHECKSUM</li><li>C128 : CODE 128</li><li>C128A : CODE 128 A</li><li>C128B : CODE 128 B</li><li>C128C : CODE 128 C</li><li>EAN2 : 2-Digits UPC-Based Extention</li><li>EAN5 : 5-Digits UPC-Based Extention</li><li>EAN8 : EAN 8</li><li>EAN13 : EAN 13</li><li>UPCA : UPC-A</li><li>UPCE : UPC-E</li><li>MSI : MSI (Variation of Plessey code)</li><li>MSI+ : MSI + CHECKSUM (modulo 11)</li><li>POSTNET : POSTNET</li><li>PLANET : PLANET</li><li>RMS4CC : RMS4CC (Royal Mail 4-state Customer Code) - CBC (Customer Bar Code)</li><li>KIX : KIX (Klant index - Customer index)</li><li>IMB: Intelligent Mail Barcode - Onecode - USPS-B-3200</li><li>CODABAR : CODABAR</li><li>CODE11 : CODE 11</li><li>PHARMA : PHARMACODE</li><li>PHARMA2T : PHARMACODE TWO-TRACKS</li></ul>
@@ -2737,7 +3047,7 @@ class DNS1D {
         } elseif (extension_loaded('imagick')) {
             $imagick = true;
             $bgcol = new imagickpixel('rgb(255,255,255');
-            $fgcol = new \imagickpixel('rgb(' . implode(',', $color) .')');
+            $fgcol = new \imagickpixel('rgb(' . implode(',', $color) . ')');
             $jpg = new Imagick();
             $jpg->newImage($width, $height, 'white', 'jpg');
             $bar = new imagickdraw();
@@ -2751,8 +3061,8 @@ class DNS1D {
             $bw = round(($v['w'] * $w), 3);
             $bh = round(($v['h'] * $h / $this->barcode_array['maxh']), 3);
 
-        if($showCode)
-                 $bh -= imagefontheight(3) ;
+            if ($showCode)
+                $bh -= imagefontheight(3);
             if ($v['t']) {
                 $y = round(($v['p'] * $h / $this->barcode_array['maxh']), 3);
                 // draw a vertical bar
@@ -2764,17 +3074,17 @@ class DNS1D {
             }
             $x += $bw;
         }
-    if($showCode)
+        if ($showCode)
             if ($imagick) {
                 $bar->setTextAlignment(\Imagick::ALIGN_CENTER);
-                $bar->annotation( 10 , $h - $bh +10 , $code );
+                $bar->annotation(10, $h - $bh + 10, $code);
             } else {
                 $width_text = imagefontwidth(3) * strlen($code);
                 $height_text = imagefontheight(3);
-                imagestring($jpg, 3, ($width/2) - ($width_text/2) , ($height - $height_text) , $code, $fgcol);
+                imagestring($jpg, 3, ($width / 2) - ($width_text / 2), ($height - $height_text), $code, $fgcol);
             }
 
-        $file_name= Str::slug($code);
+        $file_name = Str::slug($code);
         $save_file = $this->checkfile($this->store_path . $file_name . ".jpg");
 
         if ($imagick) {
@@ -2813,8 +3123,7 @@ class DNS1D {
      * @param  array  $parameters
      * @return mixed
      */
-    public function __call($method, $parameters)
-    {
+    public function __call($method, $parameters) {
         return $this->$method(...$parameters);
     }
 
@@ -2825,8 +3134,7 @@ class DNS1D {
      * @param  array  $parameters
      * @return mixed
      */
-    public static function __callStatic($method, $parameters)
-    {
+    public static function __callStatic($method, $parameters) {
         return (new static)->$method(...$parameters);
     }
 }
