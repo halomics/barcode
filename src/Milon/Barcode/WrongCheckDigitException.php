@@ -5,7 +5,6 @@ namespace Milon\Barcode;
 use Exception;
 
 class WrongCheckDigitException extends \LogicException {
-
 	/**
 	 * WrongCheckDigitException constructor.
 	 * @param int|null       $actual
@@ -22,6 +21,4 @@ class WrongCheckDigitException extends \LogicException {
 
 		parent::__construct($message, $code, $previous);
 	}
-
-
 }
